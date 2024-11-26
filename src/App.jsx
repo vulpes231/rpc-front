@@ -1,13 +1,14 @@
-// src/App.js
 import React from "react";
-import "./App.css";
-import MetaMaskButton from "./MetaMaskButton";
+import "./index.css";
+import MetaMaskButton from "./components/MetaMaskButton";
+// MetaMaskButton
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>MetaMask Network Switcher</h1>
+        <h1>$RYAN Mint Early. </h1>
+        <p>Join the waitlist now!</p>
         <MetaMaskButton />
       </header>
     </div>
