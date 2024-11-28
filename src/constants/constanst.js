@@ -1,4 +1,5 @@
-import { defineChain, createThirdwebClient } from "thirdweb";
+import { defineChain, createThirdwebClient, getContract } from "thirdweb";
+import { bscTestNetContractAddress, contractABI } from "../contract/contract";
 
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
 
@@ -26,6 +27,13 @@ const avalanche = defineChain({
   rpc: "https://avalanche-c-chain-rpc.publicnode.com",
 });
 
-const chains = [arbitrum, bnbmain, avalanche];
+const chains = [bsctest]; //arbitrum, bnbmain, avalanche,
 
-export { client, chains };
+const BSCTESTCONTRACT = getContract({
+  client: client,
+  chain: bsctest,
+  address: bscTestNetContractAddress,
+  abi: contractABI,
+});
+
+export { client, chains, BSCTESTCONTRACT };
