@@ -20,11 +20,12 @@ const bnbmain = defineChain({
   id: 56,
   rpc: "wss://bsc-rpc.publicnode.com",
 });
+
 const avalanche = defineChain({
   id: 43114,
   rpc: "https://avalanche-c-chain-rpc.publicnode.com",
 });
 
-const chains = [bsctest, arbitrum, bnbmain, avalanche];
+const chains = [arbitrum, bnbmain, avalanche];
 
 export { client, chains };
