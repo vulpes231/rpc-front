@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import Connectbutton from "../navbar/Connectbutton";
 import { FaDiscord, FaTelegram } from "react-icons/fa";
 import Actionbuttons from "./Actionbuttons";
-import { useWeb3ModalAccount } from "@web3modal/ethers/react";
 
 const Article = ({ title, info }) => {
   return (
@@ -15,7 +14,6 @@ const Article = ({ title, info }) => {
 };
 
 const Content = () => {
-  const { address, chainId, isConnected } = useWeb3ModalAccount();
   return (
     <section className="w-full p-6 flex flex-col gap-16 lg:gap-24 items-center overflow-auto">
       <div className="flex flex-col items-center gap-6 text-center">
@@ -30,7 +28,7 @@ const Content = () => {
           network secured by Ethereum and part of the OP Superchain.
         </p>
       </div>
-      <div>{!isConnected ? <Connectbutton /> : <Actionbuttons />}</div>
+      {/* <div>{!isConnected ? <Connectbutton /> : <Actionbuttons />}</div> */}
       <div className="flex flex-col gap-4">
         <h3 className="text-xl font-semibold lg:text-2xl">
           Resource hub of Ryan ecosystem

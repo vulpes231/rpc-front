@@ -1,5 +1,4 @@
 import React from "react";
-import Connectbutton from "./Connectbutton";
 import { logo } from "../../assets";
 
 const Navbar = () => {
@@ -10,7 +9,6 @@ const Navbar = () => {
           <img src={logo} alt="" className="w-[30px]" />
           <h1 className="uppercase font-bold">ryan</h1>
         </span>
-        <Connectbutton />
       </nav>
     </header>
   );
