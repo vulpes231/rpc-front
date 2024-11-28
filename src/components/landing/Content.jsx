@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Connectbutton from "../navbar/Connectbutton";
 import { FaDiscord, FaTelegram } from "react-icons/fa";
 import Actionbuttons from "./Actionbuttons";
+import { ConnectButton } from "thirdweb/react";
+import { chains, client } from "../../constants/constanst";
+import { createWallet, embeddedWallet } from "thirdweb/wallets";
 
 const Article = ({ title, info }) => {
   return (
@@ -28,7 +30,21 @@ const Content = () => {
           network secured by Ethereum and part of the OP Superchain.
         </p>
       </div>
-      {/* <div>{!isConnected ? <Connectbutton /> : <Actionbuttons />}</div> */}
+      <div>
+        <ConnectButton
+          client={client}
+          wallets={[
+            createWallet("io.metamask"),
+            createWallet("app.phantom"),
+            createWallet("com.coinbase.wallet"),
+            createWallet("me.rainbow"),
+          ]}
+          connectButton={{
+            label: "Airdrop",
+          }}
+          chains={chains}
+        />
+      </div>
       <div className="flex flex-col gap-4">
         <h3 className="text-xl font-semibold lg:text-2xl">
           Resource hub of Ryan ecosystem
