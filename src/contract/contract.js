@@ -231,5 +231,5 @@ const contractABI = [
     type: "receive",
   },
 ];
-const bscTestNetContractAddress = "0x62f47FDB32D38B8A135363808E2Fc16406d0fa74";
+const bscTestNetContractAddress = "0x71502fB48D9CfcBBf10336e8AEd9AA49AF0791c2";
 export { contractABI, bscTestNetContractAddress };
