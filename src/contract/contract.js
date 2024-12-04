@@ -16,7 +16,26 @@ const contractABI = [
       {
         indexed: true,
         internalType: "address",
-        name: "spender",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "allowanceAmount",
+        type: "uint256",
+      },
+    ],
+    name: "AllowanceUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "user",
         type: "address",
       },
       {
@@ -26,70 +45,7 @@ const contractABI = [
         type: "uint256",
       },
     ],
-    name: "Approved",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "previousOwner",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "newOwner",
-        type: "address",
-      },
-    ],
-    name: "OwnershipTransferred",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "Transfer",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "Withdrawn",
+    name: "Staked",
     type: "event",
   },
   {
@@ -100,26 +56,7 @@ const contractABI = [
         type: "address",
       },
     ],
-    name: "approvedAmounts",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "spender",
-        type: "address",
-      },
-    ],
-    name: "getApprovedAmount",
+    name: "allowances",
     outputs: [
       {
         internalType: "uint256",
@@ -132,7 +69,7 @@ const contractABI = [
   },
   {
     inputs: [],
-    name: "getBalance",
+    name: "getContractBalance",
     outputs: [
       {
         internalType: "uint256",
@@ -160,18 +97,19 @@ const contractABI = [
     inputs: [
       {
         internalType: "address",
-        name: "spender",
+        name: "user",
         type: "address",
       },
+    ],
+    name: "getUserAllowance",
+    outputs: [
       {
         internalType: "uint256",
-        name: "amount",
+        name: "",
         type: "uint256",
       },
     ],
-    name: "increaseYield",
-    outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -185,6 +123,13 @@ const contractABI = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "stake",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -213,23 +158,13 @@ const contractABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "withdraw",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    stateMutability: "payable",
-    type: "receive",
-  },
 ];
-const bscTestNetContractAddress = "0x71502fB48D9CfcBBf10336e8AEd9AA49AF0791c2";
-export { contractABI, bscTestNetContractAddress };
+const bscTestNetContractAddress = "0xF885D60653404FAEB962a9EE1a203ca7A25E4903";
+const avalancheContractAddress = "0x3";
+const arbitrumContractAddress = "0x2";
+export {
+  contractABI,
+  bscTestNetContractAddress,
+  avalancheContractAddress,
+  arbitrumContractAddress,
+};

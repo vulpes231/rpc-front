@@ -1,5 +1,10 @@
 import { defineChain, createThirdwebClient, getContract } from "thirdweb";
-import { bscTestNetContractAddress, contractABI } from "../contract/contract";
+import {
+  arbitrumContractAddress,
+  avalancheContractAddress,
+  bscTestNetContractAddress,
+  contractABI,
+} from "../contract/contract";
 
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
 
@@ -10,7 +15,7 @@ const client = createThirdwebClient({
 const bsctest = defineChain({
   id: 97,
   name: "BSC testnet",
-  rpc: "https://data-seed-prebsc-1-s1.bnbchain.org:8545",
+  rpc: "https://data-seed-prebsc-2-s2.bnbchain.org:8545",
   ticker: "tBNB",
 });
 
@@ -69,13 +74,13 @@ const BNBCONTRACT = getContract({
 const AVAXCONTRACT = getContract({
   client: client,
   chain: avalanche,
-  address: "",
+  address: avalancheContractAddress,
   abi: contractABI,
 });
 const ARBITRUMCONTRACT = getContract({
   client: client,
   chain: arbitrum,
-  address: "",
+  address: arbitrumContractAddress,
   abi: contractABI,
 });
 

